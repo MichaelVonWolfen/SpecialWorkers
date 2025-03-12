@@ -11,11 +11,17 @@ type WorkerInformation struct {
 	mangaSearchPattern   string
 	chapterList          []MangaChapter
 }
+type MangaInformation struct {
+	mangaId     int
+	mangaName   string
+	mangaUrl    string
+	chapterList []MangaChapter
+}
 type MangaChapter struct {
 	chapterId     int
 	chapterUrl    string
 	chapterName   string
-	chapterNumber int
+	chapterNumber float64
 	mangaId       int
 }
 type ReaperResponseStruct struct {
@@ -71,6 +77,44 @@ type ReaperResponseStruct struct {
 			Metadata   struct {
 			} `json:"metadata"`
 			ChaptersCount string `json:"chapters_count"`
+		} `json:"meta"`
+	} `json:"data"`
+}
+type ReaperMangaData struct {
+	Meta struct {
+		Total           int         `json:"total"`
+		PerPage         int         `json:"per_page"`
+		CurrentPage     int         `json:"current_page"`
+		LastPage        int         `json:"last_page"`
+		FirstPage       int         `json:"first_page"`
+		FirstPageUrl    string      `json:"first_page_url"`
+		LastPageUrl     string      `json:"last_page_url"`
+		NextPageUrl     interface{} `json:"next_page_url"`
+		PreviousPageUrl interface{} `json:"previous_page_url"`
+	} `json:"meta"`
+	Data []struct {
+		Id               int         `json:"id"`
+		ChapterSlug      string      `json:"chapter_slug"`
+		ChapterName      string      `json:"chapter_name"`
+		ChapterTitle     interface{} `json:"chapter_title"`
+		SeriesId         int         `json:"series_id"`
+		Price            int         `json:"price"`
+		Index            string      `json:"index"`
+		Public           bool        `json:"public"`
+		ChapterThumbnail string      `json:"chapter_thumbnail"`
+		ChapterType      string      `json:"chapter_type"`
+		CreatedAt        time.Time   `json:"created_at"`
+		UpdatedAt        *time.Time  `json:"updated_at"`
+		Series           struct {
+			SeriesSlug string `json:"series_slug"`
+			Id         int    `json:"id"`
+			Meta       struct {
+			} `json:"meta"`
+		} `json:"series"`
+		ChaptersToBeFreed []interface{} `json:"chapters_to_be_freed"`
+		NovelChapters     []interface{} `json:"novel_chapters"`
+		Excerpt           interface{}   `json:"excerpt"`
+		Meta              struct {
 		} `json:"meta"`
 	} `json:"data"`
 }
