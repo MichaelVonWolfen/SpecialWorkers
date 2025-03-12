@@ -1,6 +1,7 @@
 package main
 
 import (
+	"SpecialWorkers/models"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -13,7 +14,7 @@ import (
 	"strings"
 )
 
-func getMangaChapters(url string) ([]MangaChapter, error) {
+func getMangaChapters(url string) ([]models.MangaChapter, error) {
 	resp, err := http.Get(url)
 	if err != nil {
 		log.Println(err)
@@ -47,7 +48,7 @@ func getMangaChapters(url string) ([]MangaChapter, error) {
 		return nil, fmt.Errorf("url seems invalid")
 
 	}
-	var chapterList []MangaChapter
+	var chapterList []models.MangaChapter
 	for _, data := range mangaData.Data {
 		var chapterNB, err = strconv.ParseFloat(data.Index, 64)
 		if err != nil {
@@ -59,17 +60,17 @@ func getMangaChapters(url string) ([]MangaChapter, error) {
 		erlSeriesName = strings.ReplaceAll(erlSeriesName, " ", "-")
 		var urlChapterName = strings.ReplaceAll(data.ChapterName, " ", "-")
 		urlChapterName = strings.ToLower(urlChapterName)
-		var chapter = MangaChapter{
-			chapterUrl:    fmt.Sprintf("https://reaperscans.com/series/%s/%s", erlSeriesName, urlChapterName),
-			chapterName:   data.ChapterName,
-			chapterNumber: chapterNB,
+		var chapter = models.MangaChapter{
+			ChapterUrl:    fmt.Sprintf("https://reaperscans.com/series/%s/%s", erlSeriesName, urlChapterName),
+			ChapterName:   data.ChapterName,
+			ChapterNumber: chapterNB,
 		}
 		//fmt.Printf("%+v\n", chapter)
 		chapterList = append(chapterList, chapter)
 	}
 	return chapterList, nil
 }
-func getMangaUrl(searchUrl string, mangaName string) ([]MangaInformation, error) {
+func getMangaUrl(searchUrl string, mangaName string) ([]models.MangaInformation, error) {
 	resp, err := http.Get(searchUrl + mangaName)
 	if err != nil {
 		log.Fatal(err)
@@ -89,12 +90,12 @@ func getMangaUrl(searchUrl string, mangaName string) ([]MangaInformation, error)
 	if err != nil {
 		log.Fatalln(err)
 	}
-	var mangaList []MangaInformation
+	var mangaList []models.MangaInformation
 	for _, data := range mangaRawData.Data {
-		manga := MangaInformation{
-			mangaName:   data.Title,
-			mangaUrl:    fmt.Sprintf("https://api.reaperscans.com/chapters/%d?page=1&perPage=1000&query=&order=desc", data.Id),
-			chapterList: nil,
+		manga := models.MangaInformation{
+			MangaName:   data.Title,
+			MangaUrl:    fmt.Sprintf("https://api.reaperscans.com/chapters/%d?page=1&perPage=1000&query=&order=desc", data.Id),
+			ChapterList: nil,
 		}
 		mangaList = append(mangaList, manga)
 	}
@@ -106,16 +107,16 @@ func getMangaUrl(searchUrl string, mangaName string) ([]MangaInformation, error)
 	return mangaList, nil
 }
 
-func updateMangasAndChapters(firstMangaList []MangaInformation, secondMangaList []MangaInformation) []MangaInformation {
+func updateMangasAndChapters(firstMangaList []models.MangaInformation, secondMangaList []models.MangaInformation) []models.MangaInformation {
 
 	for i := 0; i < len(firstMangaList); i++ {
 		for j := 0; j < len(secondMangaList); j++ {
-			if firstMangaList[i].mangaName == secondMangaList[j].mangaName {
-				firstMangaList[i].chapterList = secondMangaList[j].chapterList
-				firstMangaList[i].mangaId = int(math.Max(float64(firstMangaList[i].mangaId), float64(secondMangaList[j].mangaId)))
-				firstMangaList[i].mangaUrl = secondMangaList[j].mangaUrl
+			if firstMangaList[i].MangaName == secondMangaList[j].MangaName {
+				firstMangaList[i].ChapterList = secondMangaList[j].ChapterList
+				firstMangaList[i].MangaId = int(math.Max(float64(firstMangaList[i].MangaId), float64(secondMangaList[j].MangaId)))
+				firstMangaList[i].MangaUrl = secondMangaList[j].MangaUrl
 			} else {
-				contains := slices.ContainsFunc(firstMangaList, func(m MangaInformation) bool { return m.mangaName == secondMangaList[j].mangaName })
+				contains := slices.ContainsFunc(firstMangaList, func(m models.MangaInformation) bool { return m.MangaName == secondMangaList[j].MangaName })
 				if !contains {
 					firstMangaList = append(firstMangaList, secondMangaList[j])
 				}
@@ -123,39 +124,39 @@ func updateMangasAndChapters(firstMangaList []MangaInformation, secondMangaList 
 		}
 	}
 
-	return slices.DeleteFunc(firstMangaList, func(m MangaInformation) bool { return m.mangaUrl == "" })
+	return slices.DeleteFunc(firstMangaList, func(m models.MangaInformation) bool { return m.MangaUrl == "" })
 }
-func worker(data WorkerInformation) []MangaInformation {
+func worker(data models.WorkerInformation) []models.MangaInformation {
 	isUrlValid := true
-	var mangaList []MangaInformation
-	if data.mangaUrl != "" && len(data.mangaUrl) > 0 {
-		chapterList, err := getMangaChapters(data.mangaUrl)
+	var mangaList []models.MangaInformation
+	if data.MangaUrl != "" && len(data.MangaUrl) > 0 {
+		chapterList, err := getMangaChapters(data.MangaUrl)
 		if err != nil {
 			if err.Error() == "url seems invalid" {
-				log.Printf("url seems invalid for %s \n", data.mangaName)
+				log.Printf("url seems invalid for %s \n", data.MangaName)
 				isUrlValid = false
 			} else {
 				log.Fatal(err)
 			}
 		}
-		manga := MangaInformation{
-			mangaName:   data.mangaName,
-			mangaUrl:    data.mangaUrl,
-			chapterList: chapterList,
+		manga := models.MangaInformation{
+			MangaName:   data.MangaName,
+			MangaUrl:    data.MangaUrl,
+			ChapterList: chapterList,
 		}
-		mangaList = updateMangasAndChapters([]MangaInformation{manga}, []MangaInformation{
+		mangaList = updateMangasAndChapters([]models.MangaInformation{manga}, []models.MangaInformation{
 			{
-				mangaId:     data.mangaId,
-				mangaName:   data.mangaName,
-				mangaUrl:    data.mangaUrl,
-				chapterList: data.chapterList,
+				MangaId:     data.MangaId,
+				MangaName:   data.MangaName,
+				MangaUrl:    data.MangaUrl,
+				ChapterList: data.ChapterList,
 			},
 		})
 	} else {
 		isUrlValid = false
 	}
 	if !isUrlValid {
-		mangas, err := getMangaUrl(data.websiteSearchUrl, data.mangaName)
+		mangas, err := getMangaUrl(data.WebsiteSearchUrl, data.MangaName)
 		if err != nil {
 			log.Panic(err)
 		}
@@ -163,17 +164,17 @@ func worker(data WorkerInformation) []MangaInformation {
 
 		log.Printf("Trying to read manga again after url update!")
 		for i := 0; i < len(mangas); i++ {
-			chapterList, err := getMangaChapters(mangas[i].mangaUrl)
+			chapterList, err := getMangaChapters(mangas[i].MangaUrl)
 			if err != nil {
 				log.Panic(err)
 			}
-			mangas[i].chapterList = chapterList
+			mangas[i].ChapterList = chapterList
 		}
-		mangaList = updateMangasAndChapters([]MangaInformation{{
-			mangaId:     data.mangaId,
-			mangaName:   data.mangaName,
-			mangaUrl:    data.mangaUrl,
-			chapterList: data.chapterList,
+		mangaList = updateMangasAndChapters([]models.MangaInformation{{
+			MangaId:     data.MangaId,
+			MangaName:   data.MangaName,
+			MangaUrl:    data.MangaUrl,
+			ChapterList: data.ChapterList,
 		}}, mangas)
 	}
 	fmt.Printf("%+v\n", mangaList)
@@ -181,14 +182,14 @@ func worker(data WorkerInformation) []MangaInformation {
 }
 
 func main() {
-	var testReaper = WorkerInformation{
-		websiteSearchUrl: "https://api.reaperscans.com/query?adult=true&query_string=",
-		mangaName:        "Solo",
-		mangaId:          0,
+	var testReaper = models.WorkerInformation{
+		WebsiteSearchUrl: "https://api.reaperscans.com/query?adult=true&query_string=",
+		MangaName:        "Solo",
+		MangaId:          0,
 		//mangaUrl:             "https://api.reaperscans.com/chapters/100?page=1&perPage=1000&query=&order=desc",
-		websiteSearchPattern: "",
-		mangaSearchPattern:   "",
-		chapterList:          nil,
+		WebsiteSearchPattern: "",
+		MangaSearchPattern:   "",
+		ChapterList:          nil,
 	}
 	worker(testReaper)
 	//TODO: SEND RETRIEVED DATA TO THE DB

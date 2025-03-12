@@ -2,28 +2,6 @@ package main
 
 import "time"
 
-type WorkerInformation struct {
-	websiteSearchUrl     string
-	mangaName            string
-	mangaId              int
-	mangaUrl             string
-	websiteSearchPattern string
-	mangaSearchPattern   string
-	chapterList          []MangaChapter
-}
-type MangaInformation struct {
-	mangaId     int
-	mangaName   string
-	mangaUrl    string
-	chapterList []MangaChapter
-}
-type MangaChapter struct {
-	chapterId     int
-	chapterUrl    string
-	chapterName   string
-	chapterNumber float64
-	mangaId       int
-}
 type ReaperResponseStruct struct {
 	Meta struct {
 		Total           int         `json:"total"`
