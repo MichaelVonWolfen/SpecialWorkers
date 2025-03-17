@@ -16,5 +16,5 @@ func main() {
 		ChapterList:          nil,
 	}
 	worker(testAsura)
-	//TODO: SEND RETRIEVED DATA TO THE DB
+	//TODO: SEND RETRIEVED DATA TO THE DB???
 }
