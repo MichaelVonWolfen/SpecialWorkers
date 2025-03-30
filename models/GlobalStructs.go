@@ -11,6 +11,7 @@ type WorkerInformation struct {
 }
 type MangaInformation struct {
 	MangaId     int
+	Status      string
 	MangaName   string
 	MangaUrl    string
 	ChapterList []MangaChapter
