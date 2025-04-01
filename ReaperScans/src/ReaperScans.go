@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"runtime/debug"
 	"slices"
-	"strconv"
 	"strings"
 )
 
@@ -50,12 +49,7 @@ func getMangaChapters(url string) ([]models.MangaChapter, error) {
 	}
 	var chapterList []models.MangaChapter
 	for _, data := range mangaData.Data {
-		var chapterNB, err = strconv.ParseFloat(data.Index, 64)
-		if err != nil {
-			log.Println(err)
-			debug.PrintStack()
-			continue
-		}
+		var chapterNB = data.Index
 		var erlSeriesName = strings.ToLower(data.Series.SeriesSlug)
 		erlSeriesName = strings.ReplaceAll(erlSeriesName, " ", "-")
 		var urlChapterName = strings.ReplaceAll(data.ChapterName, " ", "-")
@@ -187,7 +181,7 @@ func main() {
 		MangaName:        "Solo",
 		MangaId:          0,
 		//mangaUrl:             "https://api.reaperscans.com/chapters/100?page=1&perPage=1000&query=&order=desc",
-		WebsiteSearchPattern: "",
+		ChapterSearchPattern: "",
 		MangaSearchPattern:   "",
 		ChapterList:          nil,
 	}
